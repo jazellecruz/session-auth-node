@@ -10,6 +10,7 @@ const connectToRedis = async() => {
   }
 } 
 
+// session storage
 const redisStore = new RedisStore({
   client: redisClient
 });
