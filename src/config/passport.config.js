@@ -3,7 +3,6 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const { connection } = require("../db/db");
 
-
 const customLocalStrategy = new LocalStrategy(async(username, password, done) => {
   const foundUser = await connection.promise().query(
     `SELECT * FROM users WHERE username = ?;`, [username]);
