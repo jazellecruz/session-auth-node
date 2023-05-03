@@ -3,9 +3,8 @@ const isUserAuthenticated = (req, res, next) => {
   if(req.isAuthenticated()) {
     next();
   } else {
-    res.redirect("/session/login")
+    res.redirect("/login")
   }
 }
-
 
 module.exports = {isUserAuthenticated}
