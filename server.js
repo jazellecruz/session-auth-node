@@ -1,44 +1,70 @@
 require("dotenv").config();
 const express = require("express");
-const session = require("express-session");
-const bcrypt = require("bcrypt");
-const passport = require("passport");
 const app = express();
-const { connectDb, connection } = require("./src/db/db");
-const sessionAuth = require("./src/routes/route.session");
-const tokenAuth = require("./src/routes/route.token");
-const oauthAuth = require("./src/routes/route.oauth");
+const session = require("express-session");
+const passport = require("./src/config/passport.config");
+const { connectToDb } = require("./src/db/db");
+const {connectToRedis, redisStore } = require("./src/db/redis");
+const config = require("./src/config/env.config")
+const { isUserAuthenticated } = require("./src/middleware/index");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
 // Establish db connection
-connectDb();
+connectToDb();
+
+// Establish Redis Storage connection
+connectToRedis();
+
+// Initialize necessary middlewares and modules for Passport
+app.use(session({
+  store: redisStore,
+  secret: config.SESSION_SECRET_KEY,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    sameSite: true,
+    secure: false,  
+    httpOnly: false, 
+    maxAge: 1000 * 60 * 10,
+  },
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 
 // Main routes
-app.use("/session", sessionAuth);
-app.use("/token", tokenAuth);
-app.use("/oauth", oauthAuth );
-
 app.get("/", (req, res) => {
-  res.send("Implementation of Token-based, Session-based, and OAuth-based authentication for node apps.");
+  res.send("Implementation of Session-based authentication using Passport.js for node apps.");
 });
 
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
+app.post("/login", async(req, res, next) => {
+  passport.authenticate("local", {
+    failureRedirect: "/login", 
+    successRedirect: "/secret"})(req, res, next);
+});
+
+app.get("/secret", isUserAuthenticated, (req, res) => {
+  console.log(req.session)
+  res.send("Welcome to the secret route! 😉");
+});
+
+// Wildcard route
 app.get("*", (req, res)=> {
   res.status(404).send("No matching url found.")
 });
 
-// app.post("/create-user", async(req, res) => {
-//   try {
-//     let hashedPassword = await bcrypt.hash(req.body.password, 10);
-//     let newUser = await connection.promise().query(`INSERT INTO users (username, password, dateCreated) VALUES ("${req.body.username}", "${hashedPassword}", CURDATE());`)
-//     res.send(newUser[0])
-//   } catch(err) {
-//     res.send(err)
-//   }
-// });
-
 app.listen(8000, () => {
   console.log("Howdy from port 8000! 🤠");
 });
+
+
+//resources for understanding passport auth flow
+// http://toon.io/understanding-passportjs-authentication-flow/
