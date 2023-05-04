@@ -10,6 +10,7 @@ const { isUserAuthenticated } = require("./src/middleware/index");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
 app.set("view engine", "ejs");
 
 // Establish db connection
@@ -18,7 +19,7 @@ connectToDb();
 // Establish Redis Storage connection
 connectToRedis();
 
-// Initialize necessary middlewares and modules for Passport
+// Configure session options
 app.use(session({
   store: redisStore,
   secret: config.SESSION_SECRET_KEY,
@@ -32,6 +33,7 @@ app.use(session({
   },
 }));
 
+// Initialize necessary methods Passport will use for authentication 
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -51,9 +53,18 @@ app.post("/login", async(req, res, next) => {
     successRedirect: "/secret"})(req, res, next);
 });
 
+app.get("/logout", (req, res) => {
+  req.logout(err => {
+    if(err) {
+      return next(err); 
+    }
+    res.redirect("/login");
+  });
+});
+
 app.get("/secret", isUserAuthenticated, (req, res) => {
   console.log(req.session)
-  res.send("Welcome to the secret route! 😉");
+  res.render("secret");
 });
 
 // Wildcard route
