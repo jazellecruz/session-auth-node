@@ -19,7 +19,7 @@ connectToDb();
 // Establish Redis Storage connection
 connectToRedis();
 
-// Configure session options
+// Configure and initialize session middleware
 app.use(session({
   store: redisStore,
   secret: config.SESSION_SECRET_KEY,
@@ -33,7 +33,7 @@ app.use(session({
   },
 }));
 
-// Initialize necessary methods Passport will use for authentication 
+// Initialize passport for authenticating requests 
 app.use(passport.initialize());
 app.use(passport.session());
 
