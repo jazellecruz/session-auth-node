@@ -6,7 +6,7 @@ const connectToRedis = async() => {
     await redisClient.connect("connect");
     console.log("Redis Storage connected...");
   } catch(err) {
-    throw err;
+    console.log("Error in connecting to Redis Store...", err)
   }
 } 
 
