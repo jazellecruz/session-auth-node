@@ -37,7 +37,6 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 // Main routes
 app.get("/", (req, res) => {
   res.send("Implementation of Session-based authentication using Passport.js for node apps.");
